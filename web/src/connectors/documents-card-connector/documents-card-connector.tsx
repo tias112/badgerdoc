@@ -2,6 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars, react-hooks/exhaustive-deps, eqeqeq */
 import React, { FC, useEffect, useState, useContext } from 'react';
 import { TableWrapper, usePageTable } from 'shared';
+import { Panel } from '@epam/loveship';
 import { DocumentCardViewItem } from '../../components/documents/document-card-view-item/document-card-view-item';
 import { usePieces } from 'api/hooks/search';
 import { jobsFetcher } from '../../api/hooks/jobs';
@@ -9,6 +10,7 @@ import { Operators } from '../../api/typings';
 import { Job } from '../../api/typings/jobs';
 import { DocumentsSearch } from 'shared/contexts/documents-search';
 import styles from './documents-card-connector.module.scss';
+import { InfoText, WarningText } from 'shared';
 
 type DocumentsCardConnectorProps = {
     onFilesSelect?: (files: number[]) => void;
@@ -16,13 +18,16 @@ type DocumentsCardConnectorProps = {
 
 export const DocumentsCardConnector: FC<DocumentsCardConnectorProps> = () => {
     const { pageConfig, onPageChange, totalCount, onTotalCountChange } = usePageTable('category');
-    const { query, facetFilter, documentsSort } = useContext(DocumentsSearch);
+    const { query, facetFilter, documentsSort, method, where } = useContext(DocumentsSearch);
     const [jobs, setJobs] = useState<Job[]>();
 
+    //short_answer: semanticInfo
     const { data: files } = usePieces({
         page: pageConfig.page,
         size: pageConfig.pageSize,
         searchText: query,
+        searchMethod: method,
+        searchScope: where,
         sort: documentsSort,
         filter: facetFilter
     });
@@ -42,27 +47,51 @@ export const DocumentsCardConnector: FC<DocumentsCardConnectorProps> = () => {
 
     if (files?.data.length && jobs) {
         return (
-            <TableWrapper
-                page={pageConfig.page}
-                pageSize={pageConfig.pageSize}
-                totalCount={totalCount}
-                hasMore={files?.pagination.has_more}
-                onPageChange={onPageChange}
-            >
-                <div className={styles['card-container']}>
-                    {files.data.map(({ document_id, page_number, job_id, bbox }, index) => (
-                        <DocumentCardViewItem
-                            key={`${index}${document_id}`}
-                            isPieces
-                            documentId={document_id}
-                            name={document_id}
-                            documentPage={page_number}
-                            jobs={jobs?.filter((e) => e.id == job_id)}
-                            bbox={bbox}
+            <Panel cx={`${styles['container']} flex-col`}>
+                {files.short_answer && (
+                    <div className={`${styles['title']} flex justify-between align-vert-center`}>
+                        <InfoText
+                            infoText={`Semantic response: ${files.short_answer}`}
+                            fontsize="14"
                         />
-                    ))}
-                </div>
-            </TableWrapper>
+                    </div>
+                )}
+                <TableWrapper
+                    page={pageConfig.page}
+                    pageSize={pageConfig.pageSize}
+                    totalCount={totalCount}
+                    hasMore={files?.pagination.has_more}
+                    onPageChange={onPageChange}
+                >
+                    <div className={styles['card-container']}>
+                        {files.data.map(
+                            (
+                                {
+                                    document_id,
+                                    page_number,
+                                    job_id,
+                                    bbox,
+                                    is_highlight,
+                                    highlight_name
+                                },
+                                index
+                            ) => (
+                                <DocumentCardViewItem
+                                    key={`${index}${document_id}`}
+                                    isPieces
+                                    documentId={document_id}
+                                    name={document_id}
+                                    documentPage={page_number}
+                                    jobs={jobs?.filter((e) => e.id == job_id)}
+                                    bbox={bbox}
+                                    isHighlight={is_highlight}
+                                    highlightName={highlight_name}
+                                />
+                            )
+                        )}
+                    </div>
+                </TableWrapper>
+            </Panel>
         );
     }
 

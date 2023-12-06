@@ -54,6 +54,8 @@ export type UsePiecesParamsType = {
     page?: number;
     size?: number;
     searchText?: string;
+    searchMethod?: string;
+    searchScope?: string;
     sort: string;
     filter: FacetFilter;
 };
@@ -62,6 +64,8 @@ export type Pieces = {
     category: string;
     content: string;
     document_id: number;
+    is_highlight: boolean;
+    highlight_name: string;
     page_number: number;
     bbox: number[];
     tokens: any;

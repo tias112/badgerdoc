@@ -152,6 +152,7 @@ const DocumentsPage = () => {
                         sidebarHeaderContent={
                             <DocumentsPageControlConnector
                                 isSearchPage
+                                isSearchPiecesPage
                                 handleUploadWizardButtonClick={handleUploadWizardButtonClick}
                                 onSearchClick={onSearchClick}
                             />

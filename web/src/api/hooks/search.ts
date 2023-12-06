@@ -78,12 +78,13 @@ export const facetsFetcher = (
 };
 
 export const usePieces: QueryHookType<UsePiecesParamsType, PagedResponse<Pieces>> = (
-    { page, size, searchText, sort, filter },
+    { page, size, searchText, sort, searchMethod, searchScope, filter },
     options
 ) => {
     return useQuery(
-        ['documents', page, size, searchText, sort, filter],
-        async () => documentsFetcher(page, size, searchText, sort, filter),
+        ['documents', page, size, searchText, searchMethod, searchScope, sort, filter],
+        async () =>
+            documentsFetcher(page, size, searchText, searchMethod, searchScope, sort, filter),
         options
     );
 };
@@ -92,6 +93,8 @@ export function documentsFetcher(
     page = 1,
     size = pageSizes._15,
     searchText: string = '',
+    searchMethod: string = 'text',
+    searchScope: string = 'document',
     sort: string,
     filter: FacetFilter
 ): Promise<PagedResponse<Pieces>> {
@@ -131,6 +134,8 @@ export function documentsFetcher(
 
     const body = {
         query: searchText,
+        method: searchMethod,
+        scope: searchScope, //maybe not needed
         pagination: { page_num: page, page_size: size },
         sorting,
         filters

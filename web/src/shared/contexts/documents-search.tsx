@@ -13,10 +13,14 @@ type DocumentsSearchContext = {
     documentView: DocumentView;
     breadcrumbs: Breadcrumbs[];
     documentsSort: string;
+    method: string;
+    where: string;
     setQuery: (query: string) => void;
     setFacetFilter: (facetFilter: any) => void;
     setDocumentView: (view: DocumentView) => void;
     setDocumentsSort: (view: DocumentView) => void;
+    setWhere: (where: string) => void;
+    setMethod: (view: DocumentView) => void;
 };
 
 const defaultFacetFilters = {
@@ -44,10 +48,14 @@ export const DocumentsSearch = React.createContext<DocumentsSearchContext>({
     documentView: 'card',
     breadcrumbs: [],
     documentsSort: '',
+    method: '',
+    where: '',
     setQuery: noop,
     setFacetFilter: noop,
     setDocumentView: noop,
-    setDocumentsSort: noop
+    setDocumentsSort: noop,
+    setMethod: noop,
+    setWhere: noop
 });
 
 export const DocumentsSearchProvider: FC = ({ children }) => {
@@ -59,9 +67,12 @@ export const DocumentsSearchProvider: FC = ({ children }) => {
     const [documentsSort, setDocumentsSort] = useState<string | keyof FileDocument>(
         'last_modified'
     );
+    const [method, setMethod] = useState<string | keyof FileDocument>('text');
+    const [where, setWhere] = useState<string | keyof FileDocument>('document');
 
     const isDocuments = history.location.pathname === '/documents';
     const isSearch = history.location.pathname === '/documents/search';
+    const isSearchDoc = history.location.pathname === '/documents/search-doc';
 
     const pushSearchUrl = () => {
         let url = '';
@@ -79,6 +90,10 @@ export const DocumentsSearchProvider: FC = ({ children }) => {
 
         if (documentsSort.length && documentsSort !== 'relevancy') {
             url = url + `sort=${documentsSort}`;
+        }
+
+        if (method.length) {
+            url = url + `method=${method}`;
         }
 
         if (job.length) {
@@ -101,13 +116,21 @@ export const DocumentsSearchProvider: FC = ({ children }) => {
         if (isSearch) {
             setBreadcrumbs(searchBreadcrumbs);
             setDocumentsSort('relevancy');
+            //  setMethod('text')
+            setQuery('');
+        }
+        if (isSearchDoc) {
+            setBreadcrumbs(searchBreadcrumbs);
+            setDocumentsSort('relevancy');
+            setWhere('document');
+            //setMethod('text')
             setQuery('');
         }
     }, [history.location.pathname]);
 
     useEffect(() => {
         if (isSearch) pushSearchUrl();
-    }, [query, documentsSort, facetFilter]);
+    }, [query, documentsSort, facetFilter, method, where]);
 
     const value: DocumentsSearchContext = useMemo<DocumentsSearchContext>(() => {
         return {
@@ -116,11 +139,15 @@ export const DocumentsSearchProvider: FC = ({ children }) => {
             documentView,
             breadcrumbs,
             documentsSort,
+            method,
+            where,
             setQuery,
             setFacetFilter,
             setDocumentView,
-            setDocumentsSort
+            setDocumentsSort,
+            setMethod,
+            setWhere
         };
-    }, [query, facetFilter, documentView, breadcrumbs, documentsSort]);
+    }, [query, facetFilter, documentView, breadcrumbs, documentsSort, method]);
     return <DocumentsSearch.Provider value={value}>{children}</DocumentsSearch.Provider>;
 };

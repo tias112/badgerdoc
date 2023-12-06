@@ -25,9 +25,10 @@ import { useNotifications } from '../../shared/components/notifications';
 import { useUploadFilesMutationWithProgressTracking } from '../../api/hooks/documents';
 import { UploadIndicator } from 'components/upload-indicator/upload-indicator';
 import { useFetchWithTrackingOfUploadProgress } from './use-fetch-with-tracking-of-upload-progress';
-
+import { DocumentView } from 'api/typings';
 type DocumentsPageControlProps = {
     isSearchPage?: boolean;
+    isSearchPiecesPage?: boolean;
     handleUploadWizardButtonClick: () => void;
     onSearchClick: () => void;
 };
@@ -42,8 +43,21 @@ const sortFilesItems = [
     { id: 'original_name', name: 'Name' }
 ];
 
+const searchMethodItems = [
+    { id: 'text', name: 'Text Match' },
+    { id: 'semantic', name: 'Semantic Search' },
+    { id: 'qa', name: 'Q&A' }
+];
+
+const whereItems = [
+    { id: 'document', name: 'in  documents' },
+    { id: 'file', name: 'in file names' },
+    { id: 'annotation', name: 'in annotation' }
+];
+
 export const DocumentsPageControlConnector = ({
     isSearchPage,
+    isSearchPiecesPage,
     handleUploadWizardButtonClick
 }: DocumentsPageControlProps) => {
     const history = useHistory();
@@ -56,9 +70,23 @@ export const DocumentsPageControlConnector = ({
     });
     const dataSortSource = useArrayDataSource(
         {
-            items: isSearchPage ? sortPiecesItems : sortFilesItems
+            items: isSearchPage || isSearchPiecesPage ? sortPiecesItems : sortFilesItems
         },
         [isSearchPage]
+    );
+
+    const searchMethodSource = useArrayDataSource(
+        {
+            items: searchMethodItems
+        },
+        [isSearchPage]
+    );
+
+    const whereSource = useArrayDataSource(
+        {
+            items: whereItems
+        },
+        [isSearchPage] //TODO
     );
 
     const { notifyError, notifySuccess } = useNotifications();
@@ -68,9 +96,13 @@ export const DocumentsPageControlConnector = ({
         documentView,
         breadcrumbs,
         documentsSort,
+        method,
+        where,
         setQuery,
         setDocumentView,
-        setDocumentsSort
+        setDocumentsSort,
+        setMethod,
+        setWhere
     } = useContext(DocumentsSearch);
 
     const isCard = documentView === 'card';
@@ -128,39 +160,71 @@ export const DocumentsPageControlConnector = ({
                 </FlexRow>
             </FlexRow>
             <FlexRow spacing="12">
-                <FlexCell grow={1}>
+                <FlexCell grow={5}>
                     <SearchInput
                         value={query}
                         onValueChange={(value) => setQuery(value || '')}
                         placeholder={`Search in ${isSearchPage ? 'documents' : 'files'}`}
-                        debounceDelay={500}
+                        debounceDelay={1500}
                     />
                 </FlexCell>
-                <MultiSwitch
-                    onValueChange={(newValue) => {
-                        switch (newValue) {
-                            case 'document':
-                                history.push('/documents/search');
-                                break;
-                            case 'file':
-                                history.push('/documents');
-                                break;
-                            default:
-                                history.push('/documents');
-                        }
-                    }}
-                    items={[
-                        { id: 'document', caption: 'in documents' },
-                        { id: 'file', caption: 'in file names' }
-                    ]}
-                    value={isSearchPage ? 'document' : 'file'}
-                    color="night600"
-                />
+                {isCard && (
+                    <FlexRow cx={styles['search-filter']}>
+                        <span className={styles['sort-name']}>Scope:</span>
+                        <PickerInput
+                            minBodyWidth={20}
+                            //value={(where=='document') ? 'document' : (isSearchPage ? 'annotation'  : 'file')}
+                            value={where}
+                            // value={where}
+                            dataSource={whereSource}
+                            onValueChange={(newValue) => {
+                                //setWhere(newValue);
+
+                                switch (newValue) {
+                                    case 'document':
+                                        history.push('/documents/search');
+                                        setWhere(newValue);
+                                        break;
+                                    case 'annotation':
+                                        history.push('/documents/search');
+                                        setWhere(newValue);
+                                        break;
+                                    case 'file':
+                                        history.push('/documents');
+                                        setWhere(newValue);
+                                        break;
+                                    default:
+                                        history.push('/documents');
+                                }
+                            }}
+                            getName={(item: any) => item.name}
+                            disableClear
+                            selectionMode="single"
+                            valueType={'id'}
+                        />
+                    </FlexRow>
+                )}
+
+                {isCard && (
+                    <FlexRow cx={styles['search-filter']}>
+                        <span className={styles['sort-name']}>How:</span>
+                        <PickerInput
+                            minBodyWidth={40}
+                            dataSource={searchMethodSource}
+                            value={method}
+                            onValueChange={setMethod}
+                            getName={(item: any) => item.name}
+                            disableClear
+                            selectionMode="single"
+                            valueType={'id'}
+                        />
+                    </FlexRow>
+                )}
                 {isCard && (
                     <FlexRow cx={styles['search-filter']}>
                         <span className={styles['sort-name']}>Sort by:</span>
                         <PickerInput
-                            minBodyWidth={100}
+                            minBodyWidth={40}
                             dataSource={dataSortSource}
                             value={documentsSort}
                             onValueChange={setDocumentsSort}

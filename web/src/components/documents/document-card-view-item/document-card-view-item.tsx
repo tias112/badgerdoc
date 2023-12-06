@@ -21,6 +21,8 @@ type DocumentCardViewProps = {
     thumbnails?: {};
     selectedFiles?: number[];
     bbox?: number[];
+    isHighlight?: boolean;
+    highlightName?: string;
     setSelectedFiles?: (files: number[]) => void;
 };
 
@@ -41,6 +43,8 @@ export const DocumentCardViewItem: FC<DocumentCardViewProps> = ({
     thumbnails,
     selectedFiles,
     bbox,
+    isHighlight,
+    highlightName,
     setSelectedFiles
 }) => {
     const [chooseFile, setChooseFile] = useState<boolean>(isDocumentId(selectedFiles, documentId));
@@ -81,8 +85,10 @@ export const DocumentCardViewItem: FC<DocumentCardViewProps> = ({
         return path;
     };
 
+    const highlighted = isHighlight ? `-highlighted` : '';
+
     return (
-        <Link to={getDocumentPath(null)} className={styles['card-item']}>
+        <Link to={getDocumentPath(null)} className={styles[`card-item${highlighted}`]}>
             <div className={styles['card-item-padding']}>
                 <div className="flex justify-between">
                     <div className={styles['card-item-main']}>

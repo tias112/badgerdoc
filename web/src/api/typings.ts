@@ -53,6 +53,7 @@ export type FileDocument = {
 };
 export type PagedResponse<T> = {
     data: T[];
+    short_answer?: string;
     pagination: {
         has_more: boolean;
         min_pages_left: number;
